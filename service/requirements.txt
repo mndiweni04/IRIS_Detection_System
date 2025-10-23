@@ -2,6 +2,7 @@ numpy
 pandas
 scipy
 hmmlearn
+scikit-learn
 joblib
 bleak
 websockets
