@@ -1,0 +1,8 @@
+numpy
+pandas
+scipy
+hmmlearn
+joblib
+bleak
+websockets
+pytest-asyncio>=0.22.0
