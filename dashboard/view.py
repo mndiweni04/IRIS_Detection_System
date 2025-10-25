@@ -1,26 +1,26 @@
-import PySimpleGUI as Sg
+import PySimpleGUI as sg
 from widgets.circle_progress import CircleProgress
 
 
 class DashboardView:
     def __init__(self):
-        Sg.theme("DarkBlue14")
+        # sg.theme("DarkBlue14")  # Commented out - not available in this PySimpleGUI version
 
 
         layout = [
-            [Sg.Text("Iris Dashboard", key="-TITLE-", font=("Poppins", 40), text_color="white")], 
+            [sg.Text("Iris Dashboard", key="-TITLE-", font=("Poppins", 40), text_color="white")], 
             
-            [Sg.Text("", size=(1, 1))],
-            [Sg.Text("Bluetooth: ⭕ Disconnected", key="-BT-", font=("Poppins", 16), text_color="white")],
-            [Sg.Text("Session ID: None", key="-SESSION-", font=("Poppins", 16), text_color="white")],
-            [Sg.Text("Duration: 0 sec", key="-DURATION-", font=("Poppins", 16), text_color="white")],
-            [Sg.Canvas(size=(150, 150), key="-CIRCLE-")],
-            [Sg.Button("Looking Good! 😁", key="-BUTTON-", size=(40, 2), font=("Poppins", 16),
+            [sg.Text("", size=(1, 1))],
+            [sg.Text("Bluetooth: ⭕ Disconnected", key="-BT-", font=("Poppins", 16), text_color="white")],
+            [sg.Text("Session ID: None", key="-SESSION-", font=("Poppins", 16), text_color="white")],
+            [sg.Text("Duration: 0 sec", key="-DURATION-", font=("Poppins", 16), text_color="white")],
+            [sg.Canvas(size=(150, 150), key="-CIRCLE-")],
+            [sg.Button("Looking Good! 😁", key="-BUTTON-", size=(40, 2), font=("Poppins", 16),
                        button_color=("white", "green"))]
         ]
 
 
-        self.window = Sg.Window(
+        self.window = sg.Window(
             "IRIS Dashboard",
             layout,
             size=(700, 500),

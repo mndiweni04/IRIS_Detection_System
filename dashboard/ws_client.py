@@ -1,12 +1,13 @@
 import asyncio
 import json
 import websockets
+from typing import Optional, Callable
 
 class DashboardWebSocketClient:
     """Connects to backend WebSocket server to receive live updates."""
     def __init__(self, uri="ws://localhost:8765"):
         self.uri = uri
-        self.on_message = None
+        self.on_message: Optional[Callable] = None
 
     async def listen(self):
         """Connect and listen for messages, with connection retry logic."""
@@ -16,9 +17,9 @@ class DashboardWebSocketClient:
                 while True:
                     msg = await ws.recv()
                     data = json.loads(msg)
-                    if self.on_message:
-                        self.on_message(data)
-        except Exception as e:
+                    if self.on_message is not None:
+                        self.on_message(data)  # type: ignore[misc]
+        except (OSError, websockets.exceptions.WebSocketException) as e:
             print(f"[WS] Connection error: {e}. Retrying in 2 seconds...")
             await asyncio.sleep(2)
             await self.listen()
@@ -35,7 +36,7 @@ class DashboardWebSocketClient:
             
         except KeyboardInterrupt:
             print("[WS] WebSocket client stopped.")
-        except Exception as e:
+        except (RuntimeError, OSError) as e:
             print(f"[WS] Client loop failed: {e}")
         finally:
             if 'loop' in locals() and loop.is_running():
