@@ -33,15 +33,14 @@ class FeatureExtractor:
     def getBlinkScalar(self, data: pd.DataFrame) -> float:
         """
         Calculates the average blink duration within a time window.
-        Uses photodiode_value (IR reading in mV).
+        Uses photodiode_value (IR reading, 0-4095 range).
         
-        Blink detection: photodiode_value < threshold (eye closes → IR drops)
+        Blink detection: photodiode_value < threshold (low IR = eye closed)
         Returns the average duration in milliseconds.
         """
         if data.empty:
             return 0.0
         
-        # Handle both 'photodiode_value' and 'ir' column names
         ir_column = None
         if 'photodiode_value' in data.columns:
             ir_column = 'photodiode_value'
@@ -51,15 +50,11 @@ class FeatureExtractor:
             logger.warning("Neither 'photodiode_value' nor 'ir' column found in data")
             return 0.0
 
-        # Create a boolean series where True indicates the value is below the blink threshold
-        # This captures both short blinks and sustained eye closures.
         is_blinking = data[ir_column] < self.blink_threshold
         blink_durations = []
 
-        # Use groupby to find consecutive blocks of True values (blinks)
         for key, group in itertools.groupby(is_blinking):
             if key:
-                # Calculate the duration of the single, continuous blink event
                 duration_in_points = len(list(group))
                 duration_ms = (duration_in_points / self.sample_rate) * 1000
                 blink_durations.append(duration_ms)
@@ -94,18 +89,28 @@ class FeatureExtractor:
         if total_time == 0:
             return 0.0
         
-        # Frequency is the number of peaks over the duration
         return (len(peaks) - 1) / total_time
 
     def getAvgAccelScalar(self, data: pd.DataFrame) -> float:
         """
-        Calculates the average acceleration about the ay axis.
-        Returns the average acceleration.
+        Calculates the average acceleration scalar (motion magnitude).
+        Uses 3-axis magnitude: sqrt(ax^2 + ay^2 + az^2) - 1g (gravity compensation).
+        Returns the motion energy in g.
         """
-        if data.empty or 'ay' not in data.columns:
+        if data.empty:
             return 0.0
-        
-        return data['ay'].mean()
+
+        if all(col in data.columns for col in ("ax", "ay", "az")):
+            ax = data["ax"].to_numpy()
+            ay = data["ay"].to_numpy()
+            az = data["az"].to_numpy()
+            mag = np.sqrt(np.abs(ax)**2 + np.abs(ay)**2 + np.abs(az)**2)
+            return float(max(0.0, np.mean(mag) - 1.0))
+
+        if "ay" in data.columns:
+            return float(max(0.0, np.mean(np.abs(data["ay"].to_numpy())) - 1.0))
+
+        return 0.0
 
 # Example usage with mock data
 if __name__ == '__main__':

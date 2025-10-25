@@ -63,11 +63,7 @@ async def main():
             try:
                 frame = await asyncio.wait_for(queue.get(), timeout=1.0) 
             except asyncio.TimeoutError:
-                state.update({
-                    "connected": handler.client.is_connected if handler.client else False,
-                    "duration": round(time.time() - start_time, 1),
-                    "status": "Awaiting Data",
-                })
+                # Keep broadcasting the last known state, don't change it
                 continue 
 
             avg_accel = extractor.getAvgAccelScalar(frame)
@@ -78,27 +74,27 @@ async def main():
             blink_duration_py = float(blink_duration)
             nod_freq_py = float(nod_freq)
 
-            features = {
-                "avg_blink_duration_ms": blink_duration,
-                "avg_accel_ay": avg_accel,
-                "nod_freq_hz": nod_freq
-            }
-
             state_prediction = predict_state([blink_duration, nod_freq, avg_accel], alert_model, drowsy_model)
 
             if state_prediction == "Drowsy":
                 driver_status = "Danger"
-            elif blink_duration < 300 or avg_accel > 0.3:
+            elif blink_duration_py < 300 or avg_accel_py > 0.3:
                 driver_status = "Be careful"
             else:
                 driver_status = "Looking good"
 
             state.update({
-                "connected": handler.client.is_connected if handler.client else False,
+                "connected": (
+                    handler.client.is_connected if handler.client else False
+                ),
                 "duration": round(time.time() - start_time, 1),
                 "status": driver_status,
                 "session_id": session_id,
-                "metrics": {"avg_accel": avg_accel_py, "blink_duration": blink_duration_py, "nod_freq": nod_freq_py}
+                "metrics": {
+                    "avg_accel": avg_accel_py,
+                    "blink_duration": blink_duration_py,
+                    "nod_freq": nod_freq_py
+                }
             })
 
             logger.info(f"State: {state}")
