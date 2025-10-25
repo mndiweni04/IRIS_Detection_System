@@ -30,7 +30,7 @@ class ButtonController:
 
             progress = 0.5
         elif driver_state == "idle":
-            text = "Awaiting Data/Hardware"
+            text = ". . .Awaiting Data. . . ."
             color = "gray"
             progress = 0.0
         else:

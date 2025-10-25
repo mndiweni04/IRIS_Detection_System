@@ -6,7 +6,7 @@ import random
 from .data_cleansing.data_processor import DataProcessor 
 from .bluetooth.ble_handler import BLEHandler 
 from .feature_extraction.feature_vector import FeatureExtractor 
-from .algorithm.baseline import load_baseline, define_and_save_drowsiness_baseline
+from .algorithm.baseline import load_baseline
 from .algorithm.ml_models import load_models, predict_state
 from .config import SAMPLE_RATE, BLINK_THRESHOLD, NOD_THRESHOLD
 from .network.ws_server import WebSocketServer
