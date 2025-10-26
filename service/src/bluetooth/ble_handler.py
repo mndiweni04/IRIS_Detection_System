@@ -3,7 +3,9 @@ import asyncio
 import logging
 import json
 from typing import Optional, Callable, Any
-from ..config import DEVICE_NAME, TX_CHAR_UUID, SERVICE_UUID
+# The 'RX_CHAR_UUID' import has been commented out to revert to the one-way setup.
+# from ..config import DEVICE_NAME, TX_CHAR_UUID, SERVICE_UUID, RX_CHAR_UUID 
+from ..config import DEVICE_NAME, TX_CHAR_UUID, SERVICE_UUID 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -12,14 +14,45 @@ class BLEHandler:
         self,
         data_callback: Callable[[Any], None],
         device_name: str = DEVICE_NAME,
-        tx_uuid: str = TX_CHAR_UUID
+        tx_uuid: str = TX_CHAR_UUID,
+        # The 'rx_uuid' parameter used for the two-way bridge has been commented out.
+        # rx_uuid: str = RX_CHAR_UUID 
     ):
         self.data_callback = data_callback
         self.device_name = device_name
         self.tx_uuid = tx_uuid
+        # self.rx_uuid = rx_uuid # Commented out the assignment
+
         self.client: Optional[Any] = None
         self._running = True
         self._rx_buffer = ""
+
+    # This method, which enables the 'write' side of the two-way bridge, has been commented out.
+    # async def send_buzzer_command(self, command: str):
+    #     """
+    #     Sends a command back to the ESP32 (via the RX Characteristic) to control the buzzer.
+    #     This is the 'write' side of the two-way bridge required for Mlungisi's task.
+    #     The command should be a string like "ALERT!" or "OFF".
+    #     """
+    #     # Ensure the client is connected before attempting to write
+    #     if not self.client or not getattr(self.client, "is_connected", False):
+    #         logging.warning(f"Cannot send command '{command}': BLE client is not connected.")
+    #         return
+
+    #     try:
+    #         # Encode the string command into bytes as required by BLE
+    #         data_to_send = command.encode("utf-8")
+            
+    #         # Use the RX Characteristic UUID (the 'write' characteristic)
+    #         await self.client.write_gatt_char(
+    #             self.rx_uuid, 
+    #             data_to_send, 
+    #             response=False # Set to False for faster, unconfirmed write
+    #         )
+    #         logging.info(f"Buzzer command sent to ESP32: '{command}' on {self.rx_uuid}")
+    #     except Exception as e:
+    #         logging.error(f"Failed to send buzzer command '{command}': {e}")
+
 
     async def connect_and_subscribe(self):
         """Connect to BLE device and subscribe to TX notifications."""
@@ -79,8 +112,16 @@ class BLEHandler:
                     # Older Bleak: get_services() is a method
                     services = await self.client.services()
                 
+                # Reverting characteristic check to only TX
                 char_uuids = [c.uuid.lower() for s in services for c in s.characteristics]
+                # missing_chars = [] # Commented out two-way check logic
                 if self.tx_uuid.lower() not in char_uuids:
+                # if self.tx_uuid.lower() not in char_uuids: # Original logic
+                #     missing_chars.append("TX")
+                # if self.rx_uuid.lower() not in char_uuids: # Commented out two-way check logic
+                #     missing_chars.append("RX")
+
+                # if missing_chars: # Commented out two-way check logic
                     logging.warning(f"TX characteristic {self.tx_uuid} not found on device; disconnecting.")
                     await self.client.disconnect()
                     self.client = None
